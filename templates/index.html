@@ -1,0 +1,51 @@
+
+<html>
+<head>
+    <title>Predict Literacy Rate</title>
+    <style>
+        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+        .container {
+            background: #fff; padding: 30px; max-width: 500px; margin: auto;
+            border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        select, input[type="range"] {
+            width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #28a745; color: white; padding: 10px; width: 100%;
+            border: none; cursor: pointer; font-size: 16px;
+        }
+        h2, h3 { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Predict Literacy Rate</h2>
+        <form method="POST" action="/predict">
+            <!-- Example Dropdown -->
+            <label for="feature1">Feature 1 (e.g. Gender)</label>
+            <select name="feature1" required>
+                <option value="0">Male</option>
+                <option value="1">Female</option>
+            </select>
+
+            <!-- Example Numeric Range -->
+            <label for="feature2">Feature 2 (e.g. Age)</label>
+            <input type="range" name="feature2" min="0" max="100" step="1" oninput="ageValue.value = this.value">
+            <output id="ageValue">50</output>
+
+            <!-- Add more selects/sliders based on your features -->
+            <label for="feature3">Feature 3 (e.g. Income Level)</label>
+            <select name="feature3" required>
+                <option value="1">Low</option>
+                <option value="2">Medium</option>
+                <option value="3">High</option>
+            </select>
+
+            <input type="submit" value="Predict">
+        </form>
+
+        <h3>{{ prediction_text }}</h3>
+    </div>
+</body>
+</html>

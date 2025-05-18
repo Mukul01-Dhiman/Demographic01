@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Predict Literacy Rate</title>
+    <style>
+        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+        .container {
+            background: #fff; padding: 30px; max-width: 600px; margin: auto;
+            border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        select, input[type="number"] {
+            width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #28a745; color: white; padding: 10px; width: 100%;
+            border: none; cursor: pointer; font-size: 16px;
+        }
+        h2, h3 { color: #333; text-align: center; }
+        canvas { margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Literacy Rate Predictor</h2>
+        <form id="predictForm">
+            <label for="state">Select State</label>
+            <select id="state" name="state" required>
+                {% for s in states %}
+                    <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="year1">Year 1</label>
+            <input type="number" id="year1" name="year1" min="1950" max="2100" required>
+
+            <label for="year2">Year 2</label>
+            <input type="number" id="year2" name="year2" min="1950" max="2100" required>
+
+            <input type="submit" value="Predict">
+        </form>
+
+        <div id="result" style="display:none;">
+            <h3>Predicted Literacy Rate</h3>
+            <p><strong>Year 1:</strong> <span id="lit1"></span>%</p>
+            <p><strong>Year 2:</strong> <span id="lit2"></span>%</p>
+            <p><strong>Change:</strong> <span id="change"></span>%</p>
+
+            <canvas id="litChart" width="400" height="300"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const form = document.getElementById("predictForm");
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const state = document.getElementById("state").value;
+            const year1 = document.getElementById("year1").value;
+            const year2 = document.getElementById("year2").value;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state, year1, year2 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("lit1").innerText = data.predicted_lit_1;
+                document.getElementById("lit2").innerText = data.predicted_lit_2;
+                document.getElementById("change").innerText = data.change_percent;
+                document.getElementById("result").style.display = 'block';
+
+                const ctx = document.getElementById('litChart').getContext('2d');
+                if (window.myChart) window.myChart.destroy(); // Reset previous chart
+
+                window.myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [data.year1, data.year2],
+                        datasets: [{
+                            label: `Literacy Rate (%) in ${data.state}`,
+                            data: [data.predicted_lit_1, data.predicted_lit_2],
+                            backgroundColor: ['#007bff', '#28a745']
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => alert("Prediction failed: " + error));
+        });
+    </script>
+</body>
+</html>
+
+
+

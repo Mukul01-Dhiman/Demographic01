@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literacy Rate Prediction</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Literacy Rate Prediction</h1>
+        <form id="predictionForm">
+            <div class="form-group">
+                <label for="state">Select State:</label>
+                <select id="state" class="form-control" required>
+                    <option value="">Select a state</option>
+                    {% for state in states %}
+                        <option value="{{ state }}">{{ state }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="year1">Year 1:</label>
+                <input type="number" id="year1" min="1951" max="2011" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="year2">Year 2:</label>
+                <input type="number" id="year2"min="1951" max="2011" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Predict</button>
+        </form>
+
+        <div id="results" class="mt-4" style="display: none;">
+            <h3>Prediction Results</h3>
+            <p id="summary"></p>
+            <canvas id="literacyChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const state = document.getElementById('state').value;
+            const year1 = document.getElementById('year1').value;
+            const year2 = document.getElementById('year2').value;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ state: state, year1: year1, year2: year2 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('summary').innerHTML = `
+                        Total Literacy Rate: Year ${year1}: ${data.predicted_lit_1}, Year ${year2}: ${data.predicted_lit_2} <br>
+                        Change: ${data.change_percent}% <br>
+                        Male Literacy Rate: Year ${year1}: ${data.male_lit_1}, Year ${year2}: ${data.male_lit_2} <br>
+                        Female Literacy Rate: Year ${year1}: ${data.female_lit_1}, Year ${year2}: ${data.female_lit_2}
+                    `;
+
+                    const ctx = document.getElementById('literacyChart').getContext('2d');
+                    const literacyChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: [`Year ${year1}`, `Year ${year2}`],
+                            datasets: [
+                                {
+                                    label: 'Total Literacy Rate',
+                                    data: [data.predicted_lit_1, data.predicted_lit_2],
+                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                },
+                                {
+                                    label: 'Male Literacy Rate',
+                                    data: [data.male_lit_1, data.male_lit_2],
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                },
+                                {
+                                    label: 'Female Literacy Rate',
+                                    data: [data.female_lit_1, data.female_lit_2],
+                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html
